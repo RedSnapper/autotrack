@@ -10,6 +10,16 @@ The `outboundLinkTracker` plugin automatically detects when links are clicked to
 
 Historically, outbound link tracking has been tricky to implement because most browsers stop executing JavaScript on the current page once a link that requests a new page is clicked. The `outboundLinkTracker` plugin handles these complications for you.
 
+The following example reports show how you can use the `outboundLinkTracker` plugin to see what links users are clicking on your site:
+
+**Top outbound link clicks by URL:**
+
+![outbound-link-event-label](https://cloud.githubusercontent.com/assets/326742/22665972/bee5c654-ec6b-11e6-9d03-1cea4c936ce6.png)
+
+**Breakdown of click type for a single link:**
+
+![outbound-link-event-action](https://cloud.githubusercontent.com/assets/326742/22665973/bee64fd4-ec6b-11e6-97d3-166598d3d698.png)
+
 ## Usage
 
 To enable the `outboundLinkTracker` plugin, run the [`require`](https://developers.google.com/analytics/devguides/collection/analyticsjs/using-plugins) command, specify the plugin name `'outboundLinkTracker'`, and pass in any configuration options (if any) you wish to set:
@@ -33,50 +43,51 @@ The following table outlines all possible configuration options for the `outboun
     <th align="left">Description</th>
   </tr>
   <tr valign="top">
-    <td><code>events</code></a></td>
-    <td><code>Array</code></a></td>
+    <td><code>events</code></td>
+    <td><code>Array</code></td>
     <td>
       A list of events to listen for on links. Since it's possible to navigate to a link without generating a <code>click</code> (e.g. right-clicking generates a <code>contextmenu</code> event), you can customize this option to track additional events.<br>
       <strong>Default:</strong> <code>['click']</code>
     </td>
   </tr>
   <tr valign="top">
-    <td><code>linkSelector</code></a></td>
-    <td><code>string</code></a></td>
+    <td><code>linkSelector</code></td>
+    <td><code>string</code></td>
     <td>
       A selector used to identify links to listen for events on.<br>
-      <strong>Default:</strong> <code>'a'</code>
+      <strong>Default:</strong> <code>'a, area'</code>
     </td>
   </tr>
   <tr valign="top">
-    <td><code>shouldTrackOutboundLink</code></a></td>
-    <td><code>Function</code></a></td>
+    <td><code>shouldTrackOutboundLink</code></td>
+    <td><code>Function</code></td>
     <td>
       A function that returns <code>true</code> if the link in question should be considered an outbound link. The function is invoked with the link element as its first argument and a <code>parseUrl</code> utility function (which returns a <a href="https://developer.mozilla.org/en-US/docs/Web/API/Location"><code>Location</code></a>-like object) as its second argument.<br>
       <strong>Default:</strong>
 <pre>function shouldTrackOutboundLink(link, parseUrl) {
-  var url = parseUrl(link.href);
+  var href = link.getAttribute('href') || link.getAttribute('xlink:href');
+  var url = parseUrl(href);
   return url.hostname != location.hostname &amp;&amp;
       url.protocol.slice(0, 4) == 'http';
 }</pre>
     </td>
   </tr>
   <tr valign="top">
-    <td><code>fieldsObj</code></a></td>
-    <td><code>Object</code></a></td>
+    <td><code>fieldsObj</code></td>
+    <td><code>Object</code></td>
     <td>See the <a href="/docs/common-options.md#fieldsobj">common options guide</a> for the <code>fieldsObj</code> description.</td>
   </tr>
   <tr valign="top">
-    <td><code>attributePrefix</code></a></td>
-    <td><code>string</code></a></td>
+    <td><code>attributePrefix</code></td>
+    <td><code>string</code></td>
     <td>
       See the <a href="/docs/common-options.md#attributeprefix">common options guide</a> for the <code>attributePrefix</code> description.<br>
       <strong>Default:</strong> <code>'ga-'</code>
     </td>
   </tr>
   <tr valign="top">
-    <td><code>hitFilter</code></a></td>
-    <td><code>Function</code></a></td>
+    <td><code>hitFilter</code></td>
+    <td><code>Function</code></td>
     <td>See the <a href="/docs/common-options.md#hitfilter">common options guide</a> for the <code>hitFilter</code> description.</td>
   </tr>
 </table>
@@ -96,11 +107,11 @@ The `outboundLinkTracker` plugin sends hits with the following values. To custom
   </tr>
   <tr valign="top">
     <td><a href="https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventCategory"><code>eventCategory</code></a></td>
-    <td><code>'Outbound Link'</code></a></td>
+    <td><code>'Outbound Link'</code></td>
   </tr>
   <tr valign="top">
     <td><a href="https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventAction"><code>eventAction</code></a></td>
-    <td><code>event.type</code></a></td>
+    <td><code>event.type</code></td>
   </tr>
   <tr valign="top">
     <td><a href="https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventLabel"><code>eventLabel</code></a></td>
@@ -108,7 +119,7 @@ The `outboundLinkTracker` plugin sends hits with the following values. To custom
   </tr>
 </table>
 
-**Note:** the reference to `form` in the table above refers to the `<form>` element being clicked. The reference to `event` refers to the event being dispatched by the user interaction.
+**Note:** the reference to `link` in the table above refers to the `<a>` or `<area>` element being clicked. The reference to `event` refers to the event being dispatched by the user interaction.
 
 ## Methods
 
@@ -120,7 +131,7 @@ The following table lists all methods for the `outboundLinkTracker` plugin:
     <th align="left">Description</th>
   </tr>
   <tr valign="top">
-    <td><code>remove</code></a></td>
+    <td><code>remove</code></td>
     <td>Removes the <code>outboundLinkTracker</code> plugin from the specified tracker, removes all event listeners from the DOM, and restores all modified tasks to their original state prior to the plugin being required.</td>
   </tr>
 </table>
@@ -161,7 +172,8 @@ This code changes the default logic used to determine if a link is "outbound". I
 ```js
 ga('require', 'outboundLinkTracker', {
   shouldTrackOutboundLink: function(link, parseUrl) {
-    var url = parseUrl(link.href);
+    var href = link.getAttribute('href') || link.getAttribute('xlink:href');
+    var url = parseUrl(href);
     return /(foo|bar)\.com$/.test(url.hostname);
   }
 });
@@ -171,4 +183,16 @@ With the above code, clicks on the following link won't be tracked, even though 
 
 ```html
 <a href="https://example.com">...</a>
+```
+
+### Tracking right-clicks and middle-clicks
+
+Users don't always click on links with their primary mouse button: sometimes they middle-click to open the link in a background tab or right-click to copy the link address and share it.
+
+To track all types of link clicks, specify the `click`, [`auxclick`](https://wicg.github.io/auxclick/), and [`contextmenu`](https://developer.mozilla.org/en-US/docs/Web/Events/contextmenu) events in the [`events`](#options) option:
+
+```js
+ga('require', 'outboundLinkTracker', {
+  events: ['click', 'auxclick', 'contextmenu']
+});
 ```
